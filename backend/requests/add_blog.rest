@@ -1,0 +1,9 @@
+POST http://localhost:3003/api/blogs
+Content-Type: application/json
+
+{
+    "title": "That was supposed to be an emo heart but it wasnt :|",
+    "author": "Alina",
+    "url": "http://example.com",
+    "likes": 7
+}
