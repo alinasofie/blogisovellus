@@ -2,7 +2,7 @@ POST http://localhost:3003/api/blogs
 Content-Type: application/json
 
 {
-    "title": "That was supposed to be an emo heart but it wasnt :|",
+    "title": "Oh, it was the emo heart after all but it didnt look like that in rest extension",
     "author": "Alina",
     "url": "http://example.com",
     "likes": 7
