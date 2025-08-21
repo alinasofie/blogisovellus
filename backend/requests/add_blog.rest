@@ -1,9 +1,11 @@
 POST http://localhost:3003/api/blogs
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFsaW5hIiwiaWQiOiI2OGE1OWIzMzM2ZjlkMzQ3Njc2NzM3NmQiLCJpYXQiOjE3NTU3ODI5Nzl9.zzdVGw_Cr8qLTVjBmNn0UyPlwIqpXKN6pQNyRuCEEUs
 
 {
-    "title": "Oh, it was the emo heart after all but it didnt look like that in rest extension",
+    "title": "Helloooo is the token working?",
     "author": "Alina",
     "url": "http://example.com",
-    "likes": 7
+    "likes": 7,
+    "userId":"68a59b3336f9d3476767376d"
 }
