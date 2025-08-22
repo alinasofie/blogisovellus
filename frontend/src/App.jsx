@@ -2,6 +2,7 @@ import React from 'react'
 import { useState, useEffect } from 'react'
 import BlogList from '../components/BlogList'
 import blogService from '../services/blogservice'
+import loginService from '../services/loginService'
 import './App.css'
 
 const App = () => {
@@ -11,6 +12,9 @@ const App = () => {
   const [errorMessage, setErrorMessage] = useState('some error happened...')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [title, setTitle] = useState('')
+  const [author, setAuthor] = useState('')
+  const [url, setUrl] = useState('')
 
   useEffect(() => {
     blogService
@@ -18,22 +22,37 @@ const App = () => {
         setBlogs(initialNotes)
       })
   }, [])
-  const addBlog = (event) => {  
+
+  const addBlog = async (event) => {  
     event.preventDefault()
     const blogObject = {
-      content: newBlog,
-      important: Math.random() > 0.5,
+      title,
+      author,
+      url
     }
-    blogService
-      .create(blogObject)
-      .then(returnedBlog => {
-        setBlogs(blogs.concat(returnedBlog))
-        setNewBlog('')
-      })
+    try {
+      const returnedBlog = await blogService.create(blogObject)
+      setBlogs(blogs.concat(returnedBlog))
+      setTitle('')
+      setAuthor('')
+      setUrl('')
+      setErrorMessage(null)
+    } catch (error) {
+      setErrorMessage('Blogin lisäys ei onnistunut', error)
+    }
+
   }
-  const handleLogin = (event) => {
+
+  const handleLogin = async (event) => {
     event.preventDefault()
-    console.log('logging in with', username, password)
+    try {
+      const user = await loginService.login({ username, password })
+      blogService.setToken(user.token)
+      console.log('logging in as user: ', user)
+    } catch (error) {
+      setErrorMessage('Kirjautuminen epäonnistui', error)
+    }
+    
   }
   
   return (
@@ -65,8 +84,35 @@ const App = () => {
             </div>
             <button type="submit">login</button>
           </form>
+          <h2>Uusi blogi</h2>
+          <form onSubmit={addBlog}>
+            <div>
+              <input
+                type="text"
+                value={title}
+                placeholder="Otsikko"
+                onChange={({ target }) => setTitle(target.value)}
+              />
+            </div>
+            <div>
+              <input
+                type="text"
+                value={author}
+                placeholder="kirjoittaja"
+                onChange={({ target }) => setAuthor(target.value)}
+              />
+            </div>
+            <div>
+              <input
+                type="text"
+                value={url}
+                placeholder="url"
+                onChange={({ target }) => setUrl(target.value)}
+              />
+            </div>
+            <button type="submit">tallenna</button>
+          </form>
           <BlogList />
-          <button type="submit" name="postblog" onSubmit={addBlog}>Save</button>
       </div>
     </>
   )
