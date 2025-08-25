@@ -12,8 +12,7 @@ import blogService from '../services/blogservice'
 import loginService from '../services/loginService'
 import './App.css'
 import Notification from '../components/Notification'
-
-const App = () => {
+const MainContent = () => {
   const [blogs, setBlogs] = useState([])
   const [errorMessage, setErrorMessage] = useState(null)
   const [username, setUsername] = useState('')
@@ -22,6 +21,7 @@ const App = () => {
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
   const [url, setUrl] = useState('')
+  const navigate = useNavigate()
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogUser')
@@ -35,28 +35,7 @@ const App = () => {
       setBlogs(initialNotes)
     })
   }, [])
-
-
-  const addBlog = async (event) => {  
-    event.preventDefault()
-    const blogObject = {
-      title,
-      author,
-      url
-    }
-    try {
-      const returnedBlog = await blogService.create(blogObject)
-      setBlogs(blogs.concat(returnedBlog))
-      setTitle('')
-      setAuthor('')
-      setUrl('')
-      setErrorMessage(null)
-    } catch {
-      setErrorMessage('Blogin lisäys ei onnistunut')
-    }
-
-  }
-  const navigate = useNavigate()
+  
   const handleLogin = async (event) => {
     event.preventDefault()
     try {
@@ -76,11 +55,12 @@ const App = () => {
     }
     
   }
+  
   const handleLogout = () => {
     window.localStorage.removeItem('loggedBlogUser')
     setUser(null)
   }
-
+  
   const loginForm = () => (
     <form onSubmit={handleLogin}>
       <div>
@@ -106,6 +86,7 @@ const App = () => {
       <button type="submit">log in</button>
     </form>
   )
+
   const blogForm = (
     <form onSubmit={addBlog}>
       <div>
@@ -144,32 +125,57 @@ const App = () => {
       <button type="submit">create</button>
     </form>
   )
-
-  if (user === null) {
-    return (
-      <div>
-        <h2>Log in to application</h2>
-        {loginForm()}
-      </div>
-    )
-  }
   
+  const addBlog = async (event) => {  
+    event.preventDefault()
+    const blogObject = {
+      title,
+      author,
+      url
+    }
+    try {
+      const returnedBlog = await blogService.create(blogObject)
+      setBlogs(blogs.concat(returnedBlog))
+      setTitle('')
+      setAuthor('')
+      setUrl('')
+      setErrorMessage(null)
+    } catch {
+      setErrorMessage('Blogin lisäys ei onnistunut')
+    }
+
+  }
+
+  return (
+    <div>
+      <h1>Blogisivusto</h1>
+      <Notification message={errorMessage} />
+      {user === null ? (
+        <>
+        <h2>Kirjaudu sisään</h2>
+        {loginForm()}
+        </>
+      ) : (
+        <>
+        <p>{user.name} kirjautunut sisään</p>
+        {blogForm}
+        <BlogList blogs={blogs} />
+        <button onClick={handleLogout}>kirjaudu ulos</button>
+        </>
+      )}
+    </div>
+  )
+}
+
+const App = () => {
   return (
     <Router>
-      {user === null ? (
-        <div>
-          <h2>log in to application</h2>
-          {loginForm()}
-        </div>
-      ) : (
-        <div>
-          <h1>Blog app</h1>
-          <Notification message={errorMessage} />
-          {blogForm}
-          <BlogList blogs={blogs} />
-          <button onClick={handleLogout}>log out</button>
-        </div>
-      )}
+      <Routes>
+        <Route path="/" element={<MainContent />} />
+        <Route path="/blogs" element={<MainContent />} />
+        <Route path="/login" element={<MainContent />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
     </Router>
   )
 }
