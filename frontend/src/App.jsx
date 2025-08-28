@@ -1,27 +1,22 @@
-import React from 'react'
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-  useNavigate
-} from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import BlogList from '../components/BlogList'
 import blogService from '../services/blogservice'
 import loginService from '../services/loginService'
 import './App.css'
 import Notification from '../components/Notification'
-const MainContent = () => {
+import LoginForm from '../components/LoginForm'
+import Togglable from '../components/togglable'
+import BlogForm from '../components/BlogForm'
+
+const App = () => {
   const [blogs, setBlogs] = useState([])
   const [errorMessage, setErrorMessage] = useState(null)
+  const [errorMessageType, setErrorMessageType] = useState(null)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [loginVisible, setLoginVisible] = useState(false)
   const [user, setUser] = useState(null)
-  const [title, setTitle] = useState('')
-  const [author, setAuthor] = useState('')
-  const [url, setUrl] = useState('')
-  const navigate = useNavigate()
+  const blogFormRef = useRef()
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogUser')
@@ -35,7 +30,7 @@ const MainContent = () => {
       setBlogs(initialNotes)
     })
   }, [])
-  
+
   const handleLogin = async (event) => {
     event.preventDefault()
     try {
@@ -45,138 +40,65 @@ const MainContent = () => {
       setUser(user)
       setUsername('')
       setPassword('')
-      navigate('/blogs')
+      setLoginVisible(false)
 
     } catch {
       setErrorMessage('wrong credentials')
+      setErrorMessageType("error")
       setTimeout(() => {
         setErrorMessage(null)
+        setErrorMessageType(null)
       }, 5000)
     }
     
   }
-  
   const handleLogout = () => {
     window.localStorage.removeItem('loggedBlogUser')
     setUser(null)
   }
-  
-  const loginForm = () => (
-    <form onSubmit={handleLogin}>
-      <div>
-        <label>
-          username
-          <input
-            type="text"
-            value={username}
-            onChange={({ target }) => setUsername(target.value)}
-          />
-        </label>
-      </div>
-      <div>
-        <label>
-          password
-          <input
-            type="password"
-            value={password}
-            onChange={({ target }) => setPassword(target.value)}
-          />
-        </label>
-      </div>
-      <button type="submit">log in</button>
-    </form>
-  )
 
-  const blogForm = (
-    <form onSubmit={addBlog}>
+  if (user === null) {
+    return (
       <div>
-        <label>
-          title
-          <input
-            type="text"
-            value={title}
-            placeholder="otsikko"
-            onChange={({ target }) => setTitle(target.value)}
-          />
-        </label>
+        <Notification message={errorMessage} type={errorMessageType} />
+        <h2>Log in to the blog site</h2>
+        {!loginVisible && (
+          <button onClick={() => setLoginVisible(true)}>log in</button>
+        )}
+        {loginVisible && (
+          <div>
+            <LoginForm
+              username={username}
+              password={password}
+              handleUsernameChange={({ target }) => setUsername(target.value)}
+              handlePasswordChange={({ target }) => setPassword(target.value)}
+              handleSubmit={handleLogin} 
+            />
+            <button onClick={() => setLoginVisible(false)}>cancel</button>
+          </div>
+        )}
       </div>
-      <div>
-        <label>
-          author
-          <input
-            type="text"
-            value={author}
-            placeholder="kirjoittaja"
-            onChange={({ target }) => setAuthor(target.value)}
-          />
-        </label>
-      </div>
-      <div>
-        <label>
-          url
-          <input
-            type="text"
-            value={url}
-            placeholder="Url"
-            onChange={({ target }) => setUrl(target.value)}
-          />
-        </label>
-      </div>
-      <button type="submit">create</button>
-    </form>
-  )
-  
-  const addBlog = async (event) => {  
-    event.preventDefault()
-    const blogObject = {
-      title,
-      author,
-      url
-    }
-    try {
-      const returnedBlog = await blogService.create(blogObject)
-      setBlogs(blogs.concat(returnedBlog))
-      setTitle('')
-      setAuthor('')
-      setUrl('')
-      setErrorMessage(null)
-    } catch {
-      setErrorMessage('Blogin lisäys ei onnistunut')
-    }
-
+    )
   }
-
   return (
     <div>
-      <h1>Blogisivusto</h1>
-      <Notification message={errorMessage} />
-      {user === null ? (
-        <>
-        <h2>Kirjaudu sisään</h2>
-        {loginForm()}
-        </>
-      ) : (
-        <>
-        <p>{user.name} kirjautunut sisään</p>
-        {blogForm}
-        <BlogList blogs={blogs} />
-        <button onClick={handleLogout}>kirjaudu ulos</button>
-        </>
-      )}
+      <h1>Blog app</h1>
+      <Notification message={errorMessage} type={errorMessageType}/>
+        <div>
+          <p>{user.name} logged in</p>
+          <Togglable buttonLabel="new blog" ref={blogFormRef}>
+            <BlogForm
+              blogs={blogs}
+              setBlogs={setBlogs}
+              setErrorMessage={setErrorMessage}
+              setErrorMessageType={setErrorMessageType}
+              toggleVisibility={() => blogFormRef.current.toggleVisibility()}
+            />
+          </Togglable>
+          <BlogList blogs={blogs} />
+          <button onClick={handleLogout}>Log out</button>
+        </div>
     </div>
-  )
-}
-
-const App = () => {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<MainContent />} />
-        <Route path="/blogs" element={<MainContent />} />
-        <Route path="/login" element={<MainContent />} />
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </Router>
   )
 }
 

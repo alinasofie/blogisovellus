@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Blog from './Blog'
 
 const BlogList = () => {
     const [blogs, setBlogs] = useState([])
@@ -12,13 +13,10 @@ const BlogList = () => {
     return (
         <div>
             <h2>Blogipäivitykset</h2>
-            {blogs.map(blog => (
-                <div key={blog.id || blog._id}>
-                    <h3>{blog.title}</h3>
-                    <p><strong>Kirjoittaja:</strong> {blog.author}</p>
-                    <p><strong>Tykkäykset:</strong>{blog.likes}</p>
-                    <hr />
-                </div>
+            {blogs
+                .filter(blog => blog.title && blog.author)
+                .map(blog => (
+                <Blog key={blog.id || blog._id} blog={blog} />
             ))}
         </div>
     )
